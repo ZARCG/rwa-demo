@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import wordmarkUrl from '../assets/salvium-wordmark.svg';
 
 interface LayoutProps {
@@ -112,7 +112,6 @@ function NavDropdown({ group }: { group: DropdownGroup & { items: (DropdownItem 
 export default function Layout({ children, live }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const { pathname } = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#1e1e1e', color: '#e0e0e0' }}>
