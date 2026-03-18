@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Josefin Sans', sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1e1e1e; }
+::-webkit-scrollbar-thumb { background: #00bfa5; border-radius: 3px; }
+
+/* ── Card gradient (matching salvium.io) ──────────────────── */
+.sal-card {
+  background: linear-gradient(to bottom, rgba(40, 40, 40, 0.95), rgba(30, 30, 30, 0.98));
+}
+
+/* ── Gradient text ────────────────────────────────────────── */
+.sal-gradient-text {
+  background: linear-gradient(135deg, #00bfa5 0%, #40E0D0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Primary button ───────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #00bfa5 0%, #009688 100%);
+  transition: all 0.3s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 191, 165, 0.2);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 191, 165, 0.3);
+  border-top-color: #00bfa5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Step progress dots ───────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.step-active {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
