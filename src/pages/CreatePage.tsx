@@ -121,11 +121,11 @@ function Field({
 export default function CreatePage({ live }: { live: boolean | null }) {
   const navigate = useNavigate();
   const [template, setTemplate]     = useState<TemplateKey>('property');
-  const [ticker, setTicker]         = useState(TEMPLATES.property.ticker);
-  const [name, setName]             = useState(TEMPLATES.property.name);
-  const [description, setDescription] = useState(TEMPLATES.property.description);
-  const [id, setId]                 = useState(TEMPLATES.property.id);
-  const [supply, setSupply]         = useState(TEMPLATES.property.supply);
+  const [ticker, setTicker]         = useState<string>(TEMPLATES.property.ticker);
+  const [name, setName]             = useState<string>(TEMPLATES.property.name);
+  const [description, setDescription] = useState<string>(TEMPLATES.property.description);
+  const [id, setId]                 = useState<string>(TEMPLATES.property.id);
+  const [supply, setSupply]         = useState<number>(TEMPLATES.property.supply);
   const [step, setStep]             = useState<SubmitStep>('idle');
   const [error, setError]           = useState('');
 
