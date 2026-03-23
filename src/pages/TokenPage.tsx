@@ -54,6 +54,23 @@ function tokenTypeLabel(t: number) {
   return String(t);
 }
 
+// ── Standard badge from ticker ────────────────────────────────
+
+const STANDARD_META: Record<string, { label: string; colour: string; docsHash: string }> = {
+  'ERC-721':  { label: 'ERC-721',  colour: 'text-purple-400 bg-purple-400/10 border-purple-400/20', docsHash: '#nft--collectible' },
+  'ERC-3643': { label: 'ERC-3643', colour: 'text-sal-primary bg-sal-primary/10 border-sal-primary/20', docsHash: '#real-world-asset-rwa' },
+  'ERC-1400': { label: 'ERC-1400', colour: 'text-blue-400 bg-blue-400/10 border-blue-400/20', docsHash: '#invoice--security-token' },
+  'CIP-108':  { label: 'CIP-108',  colour: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', docsHash: '#governance-proposal' },
+};
+
+function tickerToStandardMeta(ticker: string) {
+  if (ticker.startsWith('NFT'))                          return STANDARD_META['ERC-721'];
+  if (ticker.startsWith('PROP') || ticker.startsWith('RWA')) return STANDARD_META['ERC-3643'];
+  if (ticker.startsWith('INV'))                          return STANDARD_META['ERC-1400'];
+  if (ticker.startsWith('GOV'))                          return STANDARD_META['CIP-108'];
+  return null;
+}
+
 // ── Page ─────────────────────────────────────────────────────
 
 export default function TokenPage({ live }: { live: boolean | null }) {
@@ -67,13 +84,17 @@ export default function TokenPage({ live }: { live: boolean | null }) {
   const [retries, setRetries] = useState(0);
 
   // Retrieve tx data stored by CreatePage
+  interface StoredTx { tx_hash: string; fee: number; ticker: string; }
   const storedTx = (() => {
     try {
       const raw = sessionStorage.getItem('salvium_last_tx');
       if (!raw) return null;
-      const parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw) as StoredTx;
       return parsed.ticker === ticker ? parsed : null;
-    } catch { return null; }
+    } catch (err) {
+      console.error('[TokenPage] failed to read stored tx:', err);
+      return null;
+    }
   })();
 
   useEffect(() => {
@@ -172,9 +193,26 @@ export default function TokenPage({ live }: { live: boolean | null }) {
         </div>
         <div>
           <h1 className="font-heading text-xl sm:text-2xl font-bold text-sal-text leading-snug">
-            {info.name}
+            {info.name ?? info.asset_type}
           </h1>
-          <p className="text-sal-muted font-mono text-sm mt-0.5">{info.asset_type}</p>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <p className="text-sal-muted font-mono text-sm">{info.asset_type}</p>
+            {(() => {
+              const std = tickerToStandardMeta(info.asset_type);
+              if (!std) return null;
+              return (
+                <a
+                  href={`https://docs.salvium.io/TOKENS/token-types/${std.docsHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-xs font-mono px-2 py-0.5 rounded border ${std.colour} hover:opacity-80 transition-opacity`}
+                  title="View token type documentation"
+                >
+                  {std.label}
+                </a>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
@@ -182,7 +220,7 @@ export default function TokenPage({ live }: { live: boolean | null }) {
       <div className="sal-card border border-sal-border rounded p-5 mb-4">
         <p className="text-xs text-sal-muted uppercase tracking-wider font-heading mb-3">On-Chain Data</p>
         <Field label="Asset Type" value={info.asset_type} mono />
-        <Field label="Name" value={info.name} />
+        <Field label="Name" value={info.name ?? info.asset_type} />
         <Field
           label="Supply"
           value={info.supply.toLocaleString()}
@@ -193,13 +231,13 @@ export default function TokenPage({ live }: { live: boolean | null }) {
           label="Token Type"
           value={tokenTypeLabel(info.token_type)}
           mono
-          hint="Salvium token type identifier. Type 2 = user-created SAL token (as opposed to native SAL1)."
+          hint="Salvium's internal token type number. Type 2 = a user-created token. Type 1 is the native SAL coin."
         />
         <Field
           label="Protocol Version"
           value={`v${info.version}`}
           mono
-          hint="Version of the Salvium token protocol used. v1 = current mainnet version."
+          hint="Version of the Salvium token standard this token was created with. v1 is the current version."
         />
         {info.url && (
           <Field
@@ -207,7 +245,7 @@ export default function TokenPage({ live }: { live: boolean | null }) {
             value={info.url}
             mono
             link
-            hint="URI to the hosted Tier 2 metadata blob. Click to view the raw JSON."
+            hint="URL where this token's full metadata JSON is hosted. The on-chain record contains a hash of this document to prove it hasn't been tampered with."
           />
         )}
       </div>
@@ -224,12 +262,12 @@ export default function TokenPage({ live }: { live: boolean | null }) {
               mono
               hint="The Salvium testnet transaction ID for this token creation."
             />
-            {storedTx.fee && (
+            {storedTx.fee != null && (
               <Field
                 label="Fee Paid"
                 value={`${(storedTx.fee / 1e12).toFixed(8)} SAL`}
                 mono
-                hint="Transaction fee in SAL (atomic units divided by 1e12)."
+                hint="Network fee paid to confirm this token creation, shown in SAL."
               />
             )}
           </>
@@ -244,8 +282,8 @@ export default function TokenPage({ live }: { live: boolean | null }) {
         )}
 
         <div className="pt-3 mt-1 border-t border-sal-border text-xs text-sal-muted">
-          Block explorer for this testnet version (RC2) is not yet deployed.
-          Transaction history is available via <code className="text-sal-primary bg-sal-surface px-1 rounded">get_transfers</code> in wallet-rpc.
+          A block explorer for this testnet is not yet available.
+          Full transaction history can be found in your wallet's transfer history.
         </div>
       </div>
 

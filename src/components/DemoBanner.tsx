@@ -14,11 +14,11 @@ export default function DemoBanner() {
         <div className="px-5 py-4">
           <p className="text-yellow-200 text-sm font-semibold mb-2">What you're seeing</p>
           <p className="text-yellow-200/70 text-xs leading-relaxed mb-3">
-            The middleware is not reachable, so this page is showing four built-in sample tokens.
-            Nothing here is on a real chain — it's a preview of what a live wallet would show.
+            No local Salvium node was detected, so this page shows four built-in sample tokens.
+            Nothing here is on a live chain — it's a preview of what your wallet would look like once connected.
           </p>
           <p className="text-yellow-200/70 text-xs leading-relaxed">
-            Token creation is disabled in demo mode. To mint real tokens you need the full local stack running.
+            Token creation requires a local node. You can browse freely in demo mode — no setup needed.
           </p>
         </div>
 
@@ -46,6 +46,14 @@ RPC_USER=1 RPC_PASS=1 PORT=3001 \\
 npx tsx src/server.ts`}
           </pre>
           <p className="text-yellow-200/50 text-xs mt-2">Then refresh this page — the banner disappears when the middleware is reachable.</p>
+          <a
+            href="https://docs.salvium.io/TOKENS/getting-started/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-3 text-xs text-yellow-400 hover:text-yellow-200 underline underline-offset-2 transition-colors"
+          >
+            Step-by-step setup guide →
+          </a>
         </div>
       </div>
     </div>

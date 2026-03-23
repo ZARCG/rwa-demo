@@ -24,13 +24,20 @@ function tickerToStandard(ticker: string): string {
 // ── Token card ───────────────────────────────────────────────
 
 function TokenCard({ ticker, live }: { ticker: string; live: boolean }) {
-  const [info, setInfo] = useState<TokenInfo | null>(null);
+  const [info, setInfo]     = useState<TokenInfo | null>(null);
+  const [failed, setFailed] = useState(false);
+  // getToken normalises the sal prefix internally
   const clean    = ticker.replace(/^sal/, '');
   const standard = tickerToStandard(clean);
   const meta     = STANDARDS[standard] ?? STANDARDS['Custom'];
 
   useEffect(() => {
-    getToken(clean).then(setInfo).catch(() => null);
+    getToken(clean)
+      .then(setInfo)
+      .catch((err: unknown) => {
+        console.error(`[TokenCard] failed to load "${clean}":`, err);
+        setFailed(true);
+      });
   }, [clean]);
 
   return (
@@ -70,7 +77,9 @@ function TokenCard({ ticker, live }: { ticker: string; live: boolean }) {
 
       {/* Footer */}
       <div className="mt-auto pt-3 border-t border-sal-border flex items-center justify-between text-xs text-sal-text2">
-        {info ? (
+        {failed ? (
+          <span className="text-red-400/70">Failed to load</span>
+        ) : info ? (
           <>
             <span>Supply: <span className="text-sal-text font-mono">{info.supply.toLocaleString()}</span></span>
             <span className="flex items-center gap-1 text-sal-muted">
@@ -92,17 +101,17 @@ const STEPS = [
   {
     n: '01',
     title: 'Browse',
-    body: 'Explore tokens minted on the Salvium testnet. Each card shows on-chain data — ticker, name, supply — pulled live from wallet-rpc.',
+    body: 'Explore tokens on the Salvium testnet. Each card shows live on-chain data — name, supply, and token type. In demo mode, sample tokens are shown so you can explore without any setup.',
   },
   {
     n: '02',
     title: 'Create',
-    body: 'Pick a token template (RWA, NFT, Invoice, Governance), fill in the details, and mint directly to the chain. Requires the local middleware.',
+    body: 'Choose a token type — real estate, NFT, invoice, or governance proposal — fill in the details, and click Mint. Creating tokens requires a local Salvium node running on your machine.',
   },
   {
     n: '03',
     title: 'Verify',
-    body: 'After minting, the token detail page confirms on-chain data and shows the transaction hash. The three-tier metadata is stored alongside.',
+    body: 'After minting, the token detail page shows the on-chain record and transaction hash. Metadata is stored in a compact on-chain reference linked to a full JSON document hosted off-chain.',
   },
 ];
 
@@ -119,6 +128,17 @@ function HowItWorks() {
           </div>
         ))}
       </div>
+      <p className="mt-3 text-xs text-sal-muted">
+        New to Salvium tokens?{' '}
+        <a
+          href="https://docs.salvium.io/TOKENS/getting-started/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sal-primary hover:text-sal-light transition-colors"
+        >
+          Read the getting started guide →
+        </a>
+      </p>
     </div>
   );
 }
@@ -149,21 +169,41 @@ export default function MarketplacePage({ live, setLive }: Props) {
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <div className="mb-10 pb-8 border-b border-sal-border">
-        <p className="text-xs font-heading uppercase tracking-widest text-sal-primary mb-3">
-          Salvium Testnet · RC2
+        <p className="text-xs font-heading uppercase tracking-widest text-yellow-400 mb-3">
+          Testnet Preview · Untested
         </p>
         <h1 className="font-heading text-3xl sm:text-4xl font-bold text-sal-text mb-3 leading-tight">
           Real-World Asset &amp;<br className="hidden sm:block" /> NFT Token Demo
         </h1>
         <p className="text-sal-text2 text-base max-w-2xl leading-relaxed">
-          Salvium's three-tier token protocol lets you mint RWAs, NFTs, and governance tokens
-          with structured, verifiable metadata — while preserving the privacy guarantees
-          of the Salvium chain. This demo shows the full lifecycle against a live testnet.
+          Mint real-world assets — property, invoices, NFT art, governance votes — as
+          tokens on the Salvium chain. Each token carries structured metadata that any
+          application can read and verify, while Salvium keeps the underlying transactions
+          private by default.
         </p>
+        <a
+          href="https://docs.salvium.io/TOKENS/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-1.5 text-xs text-sal-primary hover:text-sal-light transition-colors"
+        >
+          How does the token system work? Read the docs →
+        </a>
+
+        {/* Preview disclaimer */}
+        <div className="mt-5 flex items-start gap-2.5 text-xs text-yellow-200/70 bg-yellow-500/5 border border-yellow-500/20 rounded px-4 py-3 max-w-2xl">
+          <span className="text-yellow-400 shrink-0 mt-px">⚠</span>
+          <p>
+            <span className="text-yellow-300 font-semibold">Testnet preview — not tested.</span>{' '}
+            This demo runs against the Salvium RC2 testnet. It is provided for exploration and
+            developer feedback only. Do not use with real assets or treat any output as production-ready.
+          </p>
+        </div>
+
         {!loading && !isLive && (
           <div className="mt-4 inline-flex items-center gap-2 text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded">
             <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
-            Showing sample data — no middleware detected
+            Demo mode · browsing sample tokens — no local node needed
           </div>
         )}
       </div>
@@ -182,14 +222,31 @@ export default function MarketplacePage({ live, setLive }: Props) {
           </h2>
           <p className="text-xs text-sal-muted mt-0.5">
             {isLive
-              ? 'Live data from wallet-rpc — click any card to see on-chain details'
-              : 'Sample tokens showing the four main token types — connect the middleware to see real data'}
+              ? 'Live data from your Salvium node — click any card to view on-chain details'
+              : <>Sample tokens showing the four main types.{' '}
+                  <a
+                    href="https://docs.salvium.io/TOKENS/getting-started/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sal-primary hover:text-sal-light transition-colors"
+                  >
+                    Connect a local node to mint real tokens →
+                  </a>
+                </>}
           </p>
         </div>
-        {isLive && (
+        {isLive ? (
           <Link
             to="/create"
             className="btn-primary px-4 py-2 text-black font-semibold rounded text-xs uppercase tracking-wider shrink-0"
+          >
+            + Mint Token
+          </Link>
+        ) : (
+          <Link
+            to="/create"
+            className="px-4 py-2 border border-sal-border text-sal-muted rounded text-xs uppercase tracking-wider shrink-0 hover:border-sal-border-hover hover:text-sal-text2 transition-colors"
+            title="Minting requires a local Salvium node"
           >
             + Mint Token
           </Link>
@@ -239,7 +296,17 @@ export default function MarketplacePage({ live, setLive }: Props) {
           <p className="text-sal-muted text-xs text-center sm:text-left">
             {isLive
               ? `${tickers.length} token${tickers.length !== 1 ? 's' : ''} in wallet`
-              : 'Connect the middleware to see real tokens and enable minting'}
+              : <>
+                  Showing sample data.{' '}
+                  <a
+                    href="https://docs.salvium.io/TOKENS/getting-started/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sal-primary hover:text-sal-light transition-colors"
+                  >
+                    Set up a local node to mint real tokens →
+                  </a>
+                </>}
           </p>
           {isLive && (
             <Link

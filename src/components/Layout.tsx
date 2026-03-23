@@ -33,7 +33,8 @@ const NAV_GROUPS: DropdownGroup[] = [
     items: [
       { label: 'Blog',           href: 'https://salvium.io/blog' },
       { label: 'FAQ',            href: 'https://salvium.io/faq' },
-      { label: 'Knowledge Base', href: 'https://salvium.github.io/salvium_docs/', external: true },
+      { label: 'Knowledge Base', href: 'https://docs.salvium.io', external: true },
+      { label: 'Token Guide',    href: 'https://docs.salvium.io/TOKENS/', external: true },
       { label: 'Roadmap',        href: 'https://salvium.io/roadmap' },
     ],
   },
@@ -43,7 +44,7 @@ const NAV_GROUPS: DropdownGroup[] = [
       { label: 'Tools Overview', href: 'https://salvium.io/tools' },
       { label: 'Mining Pools',   href: 'https://salvium.io/pools' },
       { label: 'Statistics',     href: 'https://salvium.io/stats' },
-      { label: 'RWA Demo',       href: '/', internal: true } as DropdownItem & { internal?: boolean },
+      { label: 'Token Demo',      href: '/', internal: true } as DropdownItem & { internal?: boolean },
     ],
   },
   {
@@ -135,7 +136,7 @@ export default function Layout({ children, live }: LayoutProps) {
                   fontFamily: '"Josefin Sans", sans-serif',
                 }}
               >
-                RWA Demo
+                Token Demo
               </span>
             </a>
 
@@ -261,17 +262,17 @@ export default function Layout({ children, live }: LayoutProps) {
 
       {/* ── Page content (offset for fixed nav) ─────────────── */}
       <div className="flex-1 flex flex-col pt-16">
-        {/* Demo banner */}
+        {/* Preview banner */}
         <div
           className="text-center text-xs py-2 px-4"
-          style={{ background: 'rgba(0,191,165,0.08)', color: '#40E0D0', borderBottom: '1px solid rgba(0,191,165,0.1)' }}
+          style={{ background: 'rgba(234,179,8,0.07)', borderBottom: '1px solid rgba(234,179,8,0.2)' }}
         >
-          <span className="font-heading tracking-wide" style={{ fontFamily: '"Josefin Sans", sans-serif' }}>
-            Salvium Testnet · RC2 Pre-mainnet
+          <span className="font-heading tracking-wide font-semibold" style={{ color: '#facc15', fontFamily: '"Josefin Sans", sans-serif' }}>
+            ⚠ Testnet Preview — not tested, not for production use
           </span>
           {live !== null && live !== undefined && (
-            <span className={`ml-3 ${live ? 'text-[#00bfa5]' : 'text-yellow-400'}`}>
-              · {live ? 'Live node connected' : 'Demo mode — no node required'}
+            <span className={`ml-3 text-xs ${live ? 'text-[#00bfa5]' : 'text-yellow-400/60'}`}>
+              · {live ? 'Live node connected' : 'Demo mode'}
             </span>
           )}
         </div>

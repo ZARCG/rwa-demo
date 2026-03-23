@@ -12,7 +12,9 @@ export default function App() {
 
   // Single connection check shared across all pages
   useEffect(() => {
-    checkConnection().then(setLive);
+    checkConnection()
+      .then(setLive)
+      .catch(() => setLive(false));
   }, []);
 
   return (

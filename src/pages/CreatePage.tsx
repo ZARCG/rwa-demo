@@ -19,9 +19,19 @@ const TEMPLATES = {
     supplyHelp: 'Set to 1 for a unique asset token. Use a higher number for fractional shares.',
     extra: {
       rwa: {
-        asset_type:  'real_estate',
-        jurisdiction: 'GB',
-        valuation: { amount: 250000, currency: 'GBP', date: new Date().toISOString().slice(0, 10) },
+        asset_class:           'real_estate',
+        jurisdiction_gate:     ['GB'],
+        asset_valuation:       250000,
+        valuation_currency:    'GBP',
+        valuation_date:        new Date().toISOString().slice(0, 10),
+        required_claim_topics: [],
+        view_key_required:     false,
+        legal_linkage: {
+          legal_uid:           'GB-PROP-2026-0001',
+          legal_contract_url:  '',
+          legal_contract_hash: '',
+          governing_law:       'GB',
+        },
       },
     },
   },
@@ -133,7 +143,9 @@ export default function CreatePage({ live }: { live: boolean | null }) {
   const [resolvedLive, setResolvedLive] = useState<boolean | null>(live);
   useEffect(() => {
     if (live !== null) { setResolvedLive(live); return; }
-    checkConnection().then(setResolvedLive);
+    checkConnection()
+      .then(setResolvedLive)
+      .catch(() => setResolvedLive(false));
   }, [live]);
 
   function applyTemplate(key: TemplateKey) {
@@ -197,8 +209,8 @@ export default function CreatePage({ live }: { live: boolean | null }) {
       <div className="mb-8">
         <h1 className="font-heading text-2xl font-bold text-sal-text mb-1">Create Token</h1>
         <p className="text-sal-text2 text-sm">
-          Mint a new token on the Salvium testnet. The token and its metadata are written
-          directly to the chain via wallet-rpc.
+          Mint a new token on the Salvium testnet. Choose a type, fill in the details,
+          and the token is written to the chain via your local wallet.
         </p>
       </div>
 
@@ -208,12 +220,16 @@ export default function CreatePage({ live }: { live: boolean | null }) {
           <div className="px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/20 flex items-center gap-2">
             <span className="text-yellow-400 text-sm">⚠</span>
             <span className="text-yellow-300 text-xs font-semibold uppercase tracking-wider font-heading">
-              Middleware not connected
+              Local node not running
             </span>
           </div>
           <div className="px-5 py-4 text-xs text-yellow-200/70 leading-relaxed space-y-2">
-            <p>Token creation requires the Salvium daemon, wallet-rpc, and middleware all running locally.</p>
-            <p>Start all three components, then refresh this page. The form will unlock automatically.</p>
+            <p>
+              Minting requires three local components: the <strong className="text-yellow-200">Salvium daemon</strong> (the blockchain node),
+              the <strong className="text-yellow-200">wallet-rpc</strong> (your wallet's API server), and the{' '}
+              <strong className="text-yellow-200">middleware</strong> (the bridge that lets this page talk to your wallet).
+            </p>
+            <p>Start all three, then refresh — the form unlocks automatically.</p>
             <pre className="mt-3 bg-black/40 text-yellow-100 px-3 py-2 rounded font-mono overflow-x-auto leading-relaxed">
 {`# 1. Daemon
 salviumd --testnet --offline --fixed-difficulty 500
@@ -229,6 +245,14 @@ RPC_URL=http://127.0.0.1:29088/json_rpc \\
 RPC_USER=1 RPC_PASS=1 PORT=3001 \\
 npx tsx src/server.ts`}
             </pre>
+            <a
+              href="https://docs.salvium.io/TOKENS/getting-started/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-xs text-yellow-400 hover:text-yellow-200 underline underline-offset-2 transition-colors"
+            >
+              Step-by-step setup guide →
+            </a>
           </div>
         </div>
       )}
@@ -263,6 +287,17 @@ npx tsx src/server.ts`}
             );
           })}
         </div>
+        <p className="mt-3 text-xs text-sal-muted">
+          Not sure which to choose?{' '}
+          <a
+            href="https://docs.salvium.io/TOKENS/token-types/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sal-primary hover:text-sal-light transition-colors"
+          >
+            Token types guide →
+          </a>
+        </p>
       </div>
 
       {/* ── Form ────────────────────────────────────────── */}
@@ -272,7 +307,7 @@ npx tsx src/server.ts`}
           <Field
             label="Ticker"
             required
-            help="Exactly 4 characters — this is the permanent on-chain identifier."
+            help="Exactly 4 characters (e.g. PROP, NFT1). This is shown in your wallet — it cannot be changed after minting."
           >
             <input
               value={ticker}
@@ -321,7 +356,7 @@ npx tsx src/server.ts`}
 
         <Field
           label="Asset ID"
-          help="A stable external reference: ISIN, legal reference, invoice number, proposal ID, etc. Stored in the Tier 2 metadata blob."
+          help="An optional reference linking this token to an off-chain record — a property deed number, invoice ID, contract reference, or similar identifier. Stored in the token's metadata."
         >
           <input
             value={id}
@@ -379,11 +414,22 @@ npx tsx src/server.ts`}
       <div className="mt-6 px-4 py-4 border border-sal-border rounded text-xs text-sal-muted leading-relaxed">
         <p className="font-heading text-sal-text2 font-semibold mb-2 uppercase tracking-wider text-xs">What happens when you mint</p>
         <ol className="space-y-1 list-decimal list-inside">
-          <li>The middleware encodes your metadata to hex and sends a <code className="text-sal-primary bg-sal-surface px-1 rounded">create_token</code> call to wallet-rpc.</li>
-          <li>wallet-rpc builds a transaction and broadcasts it to the Salvium testnet daemon.</li>
-          <li>The token appears in the wallet once the transaction is confirmed on chain.</li>
-          <li>The transaction hash is returned immediately and shown on the detail page.</li>
+          <li>Your metadata is packaged and sent to your local Salvium wallet.</li>
+          <li>The wallet builds a transaction and broadcasts it to the testnet.</li>
+          <li>The token appears in your wallet once the transaction is confirmed.</li>
+          <li>You're taken to the token detail page, which shows the transaction hash.</li>
         </ol>
+        <p className="mt-3">
+          Want to understand what's happening under the hood?{' '}
+          <a
+            href="https://docs.salvium.io/TOKENS/token-protocol/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sal-primary hover:text-sal-light transition-colors"
+          >
+            Token protocol docs →
+          </a>
+        </p>
       </div>
     </div>
   );
